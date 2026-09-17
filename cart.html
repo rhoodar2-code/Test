@@ -51,22 +51,41 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
 <div id="modal" class="modal"><div class="modalcard"><button id="close" class="close">×</button><h2>🧃 Complete Order</h2>
 <p>₹30 advance payment is required.</p><label>Name</label><input id="name" placeholder="Your name"><label>Mobile Number</label><input id="phone" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
 <label>Order Type</label><div class="types"><label><input type="radio" name="type" value="Packing" checked> 🥡 Packing</label><label><input type="radio" name="type" value="Eating"> 🍽️ Eating</label></div>
-<div id="ms" class="summary"></div><button id="pay" class="action order pay">💳 Pay ₹30 Advance by UPI</button><button id="wa" class="action order" style="margin-top:9px">✅ I Have Paid — Send Order on WhatsApp</button>
+<div id="ms" class="summary"></div><div class="note" id="advanceRule" style="margin:8px 0;font-weight:700">Advance: 30% of total (orders below ₹20 require full payment)</div>
+<a id="pay" class="action order pay" href="#" rel="noopener">💳 Pay Advance by UPI</a><p class="note" style="margin-top:8px">UPI app not opening? Make sure a UPI app (Google Pay, PhonePe, Paytm, WhatsApp) is installed, or pay to <b>paytmqr68lobt@ptys</b> manually.</p><button id="wa" class="action order" style="margin-top:9px">✅ I Have Paid — Send Order on WhatsApp</button>
 <p class="note">UPI ID: <b>paytmqr68lobt@ptys</b><br>Direct UPI on GitHub Pages cannot automatically verify payment.</p></div></div>
 <script>
 const KEY='friendsJuiceCart',ADV=30,UPI='paytmqr68lobt@ptys',WA='919992238093';
 const get=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}},save=c=>localStorage.setItem(KEY,JSON.stringify(c)),total=c=>c.reduce((s,i)=>s+i.price*i.qty,0);
 function render(){const c=get(),l=document.getElementById('list'),s=document.getElementById('summary');if(!c.length){l.innerHTML='<div class="empty">🛒 Your cart is empty.<br><br><a href="index.html">Add items from menu</a></div>';s.innerHTML='';return}
 l.innerHTML=c.map((i,n)=>'<div class="item"><div><div class="name">'+esc(i.name)+'</div><div class="sub">₹'+i.price+' each • ₹'+(i.price*i.qty)+'</div></div><div class="controls"><button onclick="chg('+n+',-1)">−</button><span class="qty">'+i.qty+'</span><button onclick="chg('+n+',1)">+</button><button class="remove" onclick="rm('+n+')">🗑️</button></div></div>').join('');
-const t=total(c);s.innerHTML='<div><span>Order Total</span><b>₹'+t+'</b></div><div class="advance"><span>Advance</span><b>₹'+Math.min(ADV,t)+'</b></div><div class="remain"><span>Remaining</span><b>₹'+Math.max(0,t-ADV)+'</b></div>'}
+const t=total(c);s.innerHTML='<div><span>Order Total</span><b>₹'+t+'</b></div><div class="advance"><span>Advance</span><b>₹'+advanceAmount()+'</b></div><div class="remain"><span>Remaining</span><b>₹'+Math.max(0,t-advanceAmount())+'</b></div>'}
 function esc(x){return String(x).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function chg(n,d){const c=get();c[n].qty+=d;if(c[n].qty<=0)c.splice(n,1);save(c);render()}function rm(n){const c=get();c.splice(n,1);save(c);render()}
 document.getElementById('clear').onclick=()=>{save([]);render()};const modal=document.getElementById('modal');document.getElementById('order').onclick=()=>{if(!get().length)return alert('Your cart is empty.');modal.classList.add('open');renderModal()};document.getElementById('close').onclick=()=>modal.classList.remove('open');
 document.querySelectorAll('input[name=type]').forEach(x=>x.onchange=()=>{});
 function valid(){const n=name.value.trim(),ph=phone.value.trim();if(!n)return alert('Enter your name.'),false;if(!/^[6-9]\d{9}$/.test(ph))return alert('Enter a valid 10-digit mobile number.'),false;return true}
-function renderModal(){const t=total(get());ms.innerHTML='<div><span>Order Total</span><b>₹'+t+'</b></div><div class="advance"><span>Advance to Pay</span><b>₹'+Math.min(ADV,t)+'</b></div><div><span>Remaining</span><b>₹'+Math.max(0,t-ADV)+'</b></div>'}
-pay.onclick=()=>{if(!valid())return;const oid=window.friendsJuiceOrderId||document.getElementById('orderId')?.textContent||'FJ1001';const amount=Math.min(ADV,total(get()));const upi='upi://pay?pa='+encodeURIComponent(UPI)+'&pn='+encodeURIComponent('Friends Juice')+'&am='+encodeURIComponent(amount.toFixed(2))+'&cu=INR&tn='+encodeURIComponent('Friends Juice '+oid+' Advance');window.location.href=upi;};
-wa.onclick=()=>{if(!valid())return;const c=get(),t=total(c),ty=document.querySelector('input[name=type]:checked').value,oid=window.friendsJuiceOrderId||document.getElementById('orderId')?.textContent||'FJ1001',items=c.map(i=>i.qty+' × '+i.name+' — ₹'+(i.price*i.qty)).join('\n');const msg='🧃 *NEW ORDER — FRIENDS JUICE*\n\n🆔 Order ID: '+oid+'\n👤 Name: '+name.value.trim()+'\n📱 Mobile: '+phone.value.trim()+'\n🛍️ Type: '+ty+'\n\n*Items:*\n'+items+'\n\n💰 Total: ₹'+t+'\n💳 Advance: ₹'+Math.min(ADV,t)+'\n💵 Remaining: ₹'+Math.max(0,t-ADV)+'\n\nUPI: '+UPI+'\nWhatsApp: @friendsjuicekkr';window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank')};
+function renderModal(){const t=total(get());ms.innerHTML='<div><span>Order Total</span><b>₹'+t+'</b></div><div class="advance"><span>Advance to Pay</span><b>₹'+advanceAmount()+'</b></div><div><span>Remaining</span><b>₹'+Math.max(0,t-advanceAmount())+'</b></div>'}
+function advanceAmount(){
+  const t = total(get());
+  return t < 20 ? t : Math.ceil(t * 0.30);
+}
+
+function makeUpiUrl(){
+  const oid=window.friendsJuiceOrderId||document.getElementById('orderId')?.textContent||'FJ1001';
+  const amount=advanceAmount();
+  return 'upi://pay?pa='+encodeURIComponent(UPI)
+    +'&pn='+encodeURIComponent('Friends Juice')
+    +'&am='+encodeURIComponent(amount.toFixed(2))
+    +'&cu=INR'
+    +'&tn='+encodeURIComponent('Friends Juice '+oid+' Advance');
+}
+pay.onclick=(e)=>{
+  if(!valid()){e.preventDefault();return;}
+  pay.href=makeUpiUrl();
+  // Let the real anchor navigation happen from the user's tap.
+};
+wa.onclick=()=>{if(!valid())return;const c=get(),t=total(c),ty=document.querySelector('input[name=type]:checked').value,oid=window.friendsJuiceOrderId||document.getElementById('orderId')?.textContent||'FJ1001',items=c.map(i=>i.qty+' × '+i.name+' — ₹'+(i.price*i.qty)).join('\n');const msg='🧃 *NEW ORDER — FRIENDS JUICE*\n\n🆔 Order ID: '+oid+'\n👤 Name: '+name.value.trim()+'\n📱 Mobile: '+phone.value.trim()+'\n🛍️ Type: '+ty+'\n\n*Items:*\n'+items+'\n\n💰 Total: ₹'+t+'\n💳 Advance: ₹'+advanceAmount()+'\n💵 Remaining: ₹'+Math.max(0,t-advanceAmount())+'\n\nUPI: '+UPI+'\nWhatsApp: @friendsjuicekkr';window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank')};
 render();
 </script>
 <script>
@@ -114,6 +133,24 @@ render();
 
   // Expose for existing checkout code if needed.
   window.friendsJuiceOrderId = orderId;
+})();
+</script>
+
+
+<script>
+(function(){
+  function refreshAdvanceRule(){
+    try{
+      const cart = JSON.parse(localStorage.getItem('friendsJuiceCart') || '[]');
+      const t = cart.reduce((sum,i)=>sum + Number(i.price||0)*Number(i.qty||0),0);
+      const a = t < 20 ? t : Math.ceil(t*0.30);
+      const el = document.getElementById('advanceRule');
+      if(el) el.textContent = t < 20
+        ? 'Advance: Full payment ₹'+a
+        : 'Advance: 30% of total = ₹'+a;
+    }catch(e){}
+  }
+  refreshAdvanceRule();
 })();
 </script>
 
