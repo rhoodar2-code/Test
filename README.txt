@@ -1,0 +1,1 @@
+Upload index.html and cart.html together to GitHub Pages. Menu stores the cart in localStorage; cart.html manages quantities and order. UPI advance ₹30 to paytmqr68lobt@ptys. Static GitHub Pages cannot automatically verify UPI payment.

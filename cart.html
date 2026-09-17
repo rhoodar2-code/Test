@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Friends Juice | Manage Cart</title>
+<style>
+body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;font-family:Arial,Helvetica,sans-serif}
+.wrap{max-width:720px;margin:auto;padding:14px}.head{background:linear-gradient(145deg,#032d27,#087343);color:#fff;border:2px solid #d8ff87;border-radius:24px;padding:22px;text-align:center;box-shadow:0 12px 30px #0003}.head h1{margin:0;font-size:32px}.head p{margin:7px 0 0;color:#f7ffcf}
+.list{margin-top:14px}.item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:#fffdf7;border:1px solid #eadfca;border-radius:18px;padding:14px;margin-bottom:10px;box-shadow:0 6px 18px #0001}.name{font-size:17px;font-weight:950;color:#063d34}.sub{font-size:13px;color:#687268;margin-top:3px}.controls{display:flex;align-items:center;gap:5px}.controls button{width:34px;height:34px;padding:0;border-radius:9px;border:0;background:#087343;color:#fff;font-weight:900}.controls .remove{background:#d9534f}.qty{min-width:24px;text-align:center;font-weight:950}.summary{background:#fff;border:1px solid #eadfca;border-radius:18px;padding:15px;margin-top:14px}.summary div{display:flex;justify-content:space-between;padding:6px 0;font-weight:800}.summary .advance{color:#e74618}.summary .remain{font-size:20px;color:#087343;border-top:1px dashed #d6c8aa;margin-top:5px;padding-top:10px}.actions{display:grid;gap:9px;margin-top:12px}.action{width:100%;box-sizing:border-box;text-align:center;text-decoration:none;border:0;border-radius:13px;padding:13px;font-weight:950;font-size:15px}.back{background:#fff;border:1px solid #d6c8aa;color:#063d34}.clear{background:#d9534f;color:#fff}.order{background:linear-gradient(135deg,#ff8a00,#f04b18);color:#fff;border:2px solid #ffd27a}.empty{text-align:center;background:#fffdf7;border:1px dashed #cdbf9f;border-radius:18px;padding:35px;color:#687268;font-weight:800}.modal{display:none;position:fixed;inset:0;background:#0008;z-index:20000;align-items:center;justify-content:center;padding:10px}.modal.open{display:flex}.modalcard{width:min(100%,470px);max-height:92vh;overflow:auto;background:#fffdf7;border-radius:22px;padding:19px;border:2px solid #d8ff87}.modalcard h2{margin:0 0 5px;color:#063d34}.modalcard label{display:block;margin:10px 0 5px;font-weight:900;color:#063d34}.modalcard input,.modalcard textarea{width:100%;box-sizing:border-box;border:1px solid #d6c8aa;border-radius:10px;padding:10px;font:inherit}.types{display:flex;gap:8px}.types label{flex:1;background:#fff;border:1px solid #d6c8aa;padding:10px;border-radius:10px}.pay{margin-top:13px}.close{float:right;background:#e74618;color:#fff;border:0;border-radius:50%;width:36px;height:36px;font-size:22px}.note{text-align:center;color:#777;font-size:11px;line-height:1.4}
+
+.continue-shopping {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin:10px 0 16px;
+  padding:11px 16px;
+  border-radius:12px;
+  text-decoration:none;
+  font-weight:700;
+  font-size:14px;
+  background:#fff;
+  border:1px solid #ddd;
+  color:#222;
+  box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+.continue-shopping:active { transform:scale(.98); }
+
+
+.order-id-box{
+  background:#f7f7f7;
+  border:1px solid #ddd;
+  border-radius:14px;
+  padding:12px 14px;
+  margin:10px 0 14px;
+  font-weight:700;
+}
+.order-id-box small{
+  display:block;
+  font-weight:500;
+  opacity:.7;
+  margin-top:3px;
+}
+
+</style></head><body>
+<a class="continue-shopping" href="index.html">← Continue Shopping / Back to Menu</a>
+<div class="order-id-box" id="orderIdBox">Order ID: <span id="orderId">Generating...</span><small>Use this Order ID when checking the ₹30 advance payment.</small></div>
+
+<div class="wrap">
+<div class="head"><h1>🛒 Manage Your Cart</h1><p>Friends Juice Corner</p></div>
+<div id="list" class="list"></div><div id="summary" class="summary"></div>
+<div class="actions"><a class="action back" href="index.html">← Back to Menu</a><button id="clear" class="action clear">🗑️ Clear Cart</button><button id="order" class="action order">💳 Proceed to Order</button></div></div>
+<div id="modal" class="modal"><div class="modalcard"><button id="close" class="close">×</button><h2>🧃 Complete Order</h2>
+<p>₹30 advance payment is required.</p><label>Name</label><input id="name" placeholder="Your name"><label>Mobile Number</label><input id="phone" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+<label>Order Type</label><div class="types"><label><input type="radio" name="type" value="Pickup" checked> Pickup</label><label><input type="radio" name="type" value="Delivery"> Delivery</label></div>
+<label id="al" style="display:none">Delivery Address</label><textarea id="address" rows="2" style="display:none" placeholder="Delivery address"></textarea>
+<div id="ms" class="summary"></div><button id="pay" class="action order pay">💳 Pay ₹30 Advance by UPI</button><button id="wa" class="action order" style="margin-top:9px">✅ I Have Paid — Send Order on WhatsApp</button>
+<p class="note">UPI ID: <b>paytmqr68lobt@ptys</b><br>Direct UPI on GitHub Pages cannot automatically verify payment.</p></div></div>
+<script>
+const KEY='friendsJuiceCart',ADV=30,UPI='paytmqr68lobt@ptys',WA='919992238093';
+const get=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}},save=c=>localStorage.setItem(KEY,JSON.stringify(c)),total=c=>c.reduce((s,i)=>s+i.price*i.qty,0);
+function render(){const c=get(),l=document.getElementById('list'),s=document.getElementById('summary');if(!c.length){l.innerHTML='<div class="empty">🛒 Your cart is empty.<br><br><a href="index.html">Add items from menu</a></div>';s.innerHTML='';return}
+l.innerHTML=c.map((i,n)=>'<div class="item"><div><div class="name">'+esc(i.name)+'</div><div class="sub">₹'+i.price+' each • ₹'+(i.price*i.qty)+'</div></div><div class="controls"><button onclick="chg('+n+',-1)">−</button><span class="qty">'+i.qty+'</span><button onclick="chg('+n+',1)">+</button><button class="remove" onclick="rm('+n+')">🗑️</button></div></div>').join('');
+const t=total(c);s.innerHTML='<div><span>Order Total</span><b>₹'+t+'</b></div><div class="advance"><span>Advance</span><b>₹'+Math.min(ADV,t)+'</b></div><div class="remain"><span>Remaining</span><b>₹'+Math.max(0,t-ADV)+'</b></div>'}
+function esc(x){return String(x).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function chg(n,d){const c=get();c[n].qty+=d;if(c[n].qty<=0)c.splice(n,1);save(c);render()}function rm(n){const c=get();c.splice(n,1);save(c);render()}
+document.getElementById('clear').onclick=()=>{save([]);render()};const modal=document.getElementById('modal');document.getElementById('order').onclick=()=>{if(!get().length)return alert('Your cart is empty.');modal.classList.add('open');renderModal()};document.getElementById('close').onclick=()=>modal.classList.remove('open');
+document.querySelectorAll('input[name=type]').forEach(x=>x.onchange=()=>{const d=x.value==='Delivery'&&x.checked;address.style.display=d?'block':'none';al.style.display=d?'block':'none'});
+function valid(){const n=name.value.trim(),ph=phone.value.trim(),t=document.querySelector('input[name=type]:checked').value,a=address.value.trim();if(!n)return alert('Enter your name.'),false;if(!/^[6-9]\d{9}$/.test(ph))return alert('Enter a valid 10-digit mobile number.'),false;if(t==='Delivery'&&!a)return alert('Enter delivery address.'),false;return true}
+function renderModal(){const t=total(get());ms.innerHTML='<div><span>Order Total</span><b>₹'+t+'</b></div><div class="advance"><span>Advance to Pay</span><b>₹'+Math.min(ADV,t)+'</b></div><div><span>Remaining</span><b>₹'+Math.max(0,t-ADV)+'</b></div>'}
+pay.onclick=()=>{if(!valid())return;location.href='upi://pay?pa='+encodeURIComponent(UPI)+'&pn='+encodeURIComponent('Friends Juice')+'&am='+ADV+'&cu=INR&tn='+encodeURIComponent('Friends Juice advance - '+name.value.trim())};
+wa.onclick=()=>{if(!valid())return;const c=get(),t=total(c),ty=document.querySelector('input[name=type]:checked').value,a=address.value.trim(),items=c.map(i=>i.qty+' × '+i.name+' — ₹'+(i.price*i.qty)).join('\n');const msg='🧃 *NEW ORDER — FRIENDS JUICE*\n\n👤 Name: '+name.value.trim()+'\n📱 Mobile: '+phone.value.trim()+'\n🛍️ Type: '+ty+'\n'+(ty==='Delivery'?'📍 Address: '+a+'\n':'')+'\n*Items:*\n'+items+'\n\n💰 Total: ₹'+t+'\n💳 Advance: ₹'+ADV+'\n💵 Remaining: ₹'+Math.max(0,t-ADV)+'\n\nUPI: '+UPI;window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank')};
+render();
+</script>
+<script>
+(function(){
+  const KEY = 'friendsJuiceNextOrderNumber';
+  let orderId = sessionStorage.getItem('friendsJuiceCurrentOrderId');
+  if (!orderId) {
+    let n = parseInt(localStorage.getItem(KEY) || '1000', 10);
+    if (!Number.isFinite(n) || n < 1000) n = 1000;
+    n += 1;
+    localStorage.setItem(KEY, String(n));
+    orderId = 'FJ' + n;
+    sessionStorage.setItem('friendsJuiceCurrentOrderId', orderId);
+  }
+
+  const el = document.getElementById('orderId');
+  if (el) el.textContent = orderId;
+
+  // Add the order ID to the UPI transaction note/reference when the
+  // existing UPI link is used. This does not itself verify payment.
+  function updateLinks(){
+    document.querySelectorAll('a[href^="upi://pay"]').forEach(a => {
+      try {
+        const u = new URL(a.href);
+        u.searchParams.set('tn', 'Friends Juice ' + orderId);
+        a.href = u.toString();
+      } catch(e) {}
+    });
+
+    // Preserve any existing WhatsApp link but append the Order ID.
+    document.querySelectorAll('a[href*="wa.me"], a[href*="whatsapp"]').forEach(a => {
+      const href = a.getAttribute('href') || '';
+      if (!href.includes('text=')) return;
+      try {
+        const u = new URL(href);
+        const text = decodeURIComponent(u.searchParams.get('text') || '');
+        if (!text.includes(orderId)) {
+          u.searchParams.set('text', text + '\\nOrder ID: ' + orderId);
+          a.href = u.toString();
+        }
+      } catch(e) {}
+    });
+  }
+  updateLinks();
+
+  // Expose for existing checkout code if needed.
+  window.friendsJuiceOrderId = orderId;
+})();
+</script>
+
+</body></html>
