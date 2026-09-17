@@ -40,6 +40,47 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
   margin-top:3px;
 }
 
+
+#paymentRuleText{margin:8px 0 14px;line-height:1.45}
+#advanceRule{margin:8px 0 12px!important;line-height:1.45}
+
+
+.upi-pay-box{
+  margin:12px 0 10px;
+  padding:15px;
+  border:1px solid #eadfca;
+  border-radius:18px;
+  background:#fffdf8;
+  box-shadow:0 5px 16px rgba(0,0,0,.08);
+}
+.upi-title{font-size:20px;font-weight:950;color:#063d34}
+.upi-subtitle{font-size:13px;margin:4px 0 12px;opacity:.7}
+.upi-apps{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.upi-app{
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:13px;
+  border:2px solid #e0d4bd;
+  background:#fff;
+  color:#063d34;
+  text-decoration:none;
+  font-weight:900;
+  font-size:14px;
+  box-shadow:0 3px 8px rgba(0,0,0,.07);
+}
+.upi-app:active{transform:scale(.97)}
+.upi-generic{
+  grid-column:1 / -1;
+  background:linear-gradient(135deg,#087343,#159b68);
+  color:#fff;
+  border-color:#d8ff87;
+}
+.upi-app span{font-weight:900}
+
 </style></head><body>
 <a class="continue-shopping" href="index.html">← Continue Shopping / Back to Menu</a>
 <div class="order-id-box" id="orderIdBox">Order ID: <span id="orderId">Generating...</span><small>Use this Order ID when checking the advance payment.</small></div>
@@ -49,10 +90,20 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
 <div id="list" class="list"></div><div id="summary" class="summary"></div>
 <div class="actions"><a class="action back" href="index.html">← Back to Menu</a><button id="clear" class="action clear">🗑️ Clear Cart</button><button id="order" class="action order">💳 Proceed to Order</button></div></div>
 <div id="modal" class="modal"><div class="modalcard"><button id="close" class="close">×</button><h2>🧃 Complete Order</h2>
-<p>₹30 advance payment is required.</p><label>Name</label><input id="name" placeholder="Your name"><label>Mobile Number</label><input id="phone" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+<p id="paymentRuleText">30% advance payment is required.</p><label>Name</label><input id="name" placeholder="Your name"><label>Mobile Number</label><input id="phone" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
 <label>Order Type</label><div class="types"><label><input type="radio" name="type" value="Packing" checked> 🥡 Packing</label><label><input type="radio" name="type" value="Eating"> 🍽️ Eating</label></div>
 <div id="ms" class="summary"></div><div class="note" id="advanceRule" style="margin:8px 0;font-weight:700">Advance: 30% of total (orders below ₹20 require full payment)</div>
-<a id="pay" class="action order pay" href="#" rel="noopener">💳 Pay Advance by UPI</a><p class="note" style="margin-top:8px">UPI app not opening? Make sure a UPI app (Google Pay, PhonePe, Paytm, WhatsApp) is installed, or pay to <b>paytmqr68lobt@ptys</b> manually.</p><button id="wa" class="action order" style="margin-top:9px">✅ I Have Paid — Send Order on WhatsApp</button>
+<div class="upi-pay-box">
+  <div class="upi-title">💳 Choose UPI App</div>
+  <div class="upi-subtitle">Select your preferred app to pay the advance</div>
+  <div class="upi-apps">
+    <a class="upi-app upi-generic" id="pay" href="#" rel="noopener">📲<span>Choose UPI App</span></a>
+    <a class="upi-app" id="payGpay" href="#" rel="noopener">G<span>Google Pay</span></a>
+    <a class="upi-app" id="payPhonePe" href="#" rel="noopener">🟣<span>PhonePe</span></a>
+    <a class="upi-app" id="payPaytm" href="#" rel="noopener">🔵<span>Paytm</span></a>
+    <a class="upi-app" id="payWhatsApp" href="#" rel="noopener">🟢<span>WhatsApp Pay</span></a>
+  </div>
+</div><p class="note" style="margin-top:8px">UPI app not opening? Make sure a UPI app (Google Pay, PhonePe, Paytm, WhatsApp) is installed, or pay to <b>paytmqr68lobt@ptys</b> manually.</p><button id="wa" class="action order" style="margin-top:9px">✅ I Have Paid — Send Order on WhatsApp</button>
 <p class="note">UPI ID: <b>paytmqr68lobt@ptys</b><br>Direct UPI on GitHub Pages cannot automatically verify payment.</p></div></div>
 <script>
 const KEY='friendsJuiceCart',ADV=30,UPI='paytmqr68lobt@ptys',WA='919992238093';
@@ -80,11 +131,19 @@ function makeUpiUrl(){
     +'&cu=INR'
     +'&tn='+encodeURIComponent('Friends Juice '+oid+' Advance');
 }
-pay.onclick=(e)=>{
-  if(!valid()){e.preventDefault();return;}
-  pay.href=makeUpiUrl();
-  // Let the real anchor navigation happen from the user's tap.
-};
+function setUpiLinks(){
+  const generic=makeUpiUrl();
+  const ids=['pay','payGpay','payPhonePe','payPaytm','payWhatsApp'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.href=generic;});
+}
+['pay','payGpay','payPhonePe','payPaytm','payWhatsApp'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('click',function(e){
+    if(!valid()){e.preventDefault();return;}
+    setUpiLinks();
+  });
+});
+setUpiLinks();
 wa.onclick=()=>{if(!valid())return;const c=get(),t=total(c),ty=document.querySelector('input[name=type]:checked').value,oid=window.friendsJuiceOrderId||document.getElementById('orderId')?.textContent||'FJ1001',items=c.map(i=>i.qty+' × '+i.name+' — ₹'+(i.price*i.qty)).join('\n');const msg='🧃 *NEW ORDER — FRIENDS JUICE*\n\n🆔 Order ID: '+oid+'\n👤 Name: '+name.value.trim()+'\n📱 Mobile: '+phone.value.trim()+'\n🛍️ Type: '+ty+'\n\n*Items:*\n'+items+'\n\n💰 Total: ₹'+t+'\n💳 Advance: ₹'+advanceAmount()+'\n💵 Remaining: ₹'+Math.max(0,t-advanceAmount())+'\n\nUPI: '+UPI+'\nWhatsApp: @friendsjuicekkr';window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank')};
 render();
 </script>
@@ -151,6 +210,24 @@ render();
     }catch(e){}
   }
   refreshAdvanceRule();
+})();
+</script>
+
+
+<script>
+(function(){
+  function updatePaymentRuleText(){
+    const el=document.getElementById('paymentRuleText');
+    if(!el) return;
+    try{
+      const c=JSON.parse(localStorage.getItem('friendsJuiceCart')||'[]');
+      const t=c.reduce((sum,i)=>sum+Number(i.price||0)*Number(i.qty||0),0);
+      el.textContent=t<20
+        ? 'Full payment is required for orders below ₹20.'
+        : '30% advance payment is required.';
+    }catch(e){}
+  }
+  updatePaymentRuleText();
 })();
 </script>
 
