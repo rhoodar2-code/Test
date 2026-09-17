@@ -42,7 +42,7 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
 
 </style></head><body>
 <a class="continue-shopping" href="index.html">← Continue Shopping / Back to Menu</a>
-<div class="order-id-box" id="orderIdBox">Order ID: <span id="orderId">Generating...</span><small>Use this Order ID when checking the ₹30 advance payment.</small></div>
+<div class="order-id-box" id="orderIdBox">Order ID: <span id="orderId">Generating...</span><small>Use this Order ID when checking the advance payment.</small></div>
 
 <div class="wrap">
 <div class="head"><h1>🛒 Manage Your Cart</h1><p>Friends Juice Corner</p></div>
@@ -50,8 +50,7 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
 <div class="actions"><a class="action back" href="index.html">← Back to Menu</a><button id="clear" class="action clear">🗑️ Clear Cart</button><button id="order" class="action order">💳 Proceed to Order</button></div></div>
 <div id="modal" class="modal"><div class="modalcard"><button id="close" class="close">×</button><h2>🧃 Complete Order</h2>
 <p>₹30 advance payment is required.</p><label>Name</label><input id="name" placeholder="Your name"><label>Mobile Number</label><input id="phone" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
-<label>Order Type</label><div class="types"><label><input type="radio" name="type" value="Pickup" checked> Pickup</label><label><input type="radio" name="type" value="Delivery"> Delivery</label></div>
-<label id="al" style="display:none">Delivery Address</label><textarea id="address" rows="2" style="display:none" placeholder="Delivery address"></textarea>
+<label>Order Type</label><div class="types"><label><input type="radio" name="type" value="Packing" checked> 🥡 Packing</label><label><input type="radio" name="type" value="Eating"> 🍽️ Eating</label></div>
 <div id="ms" class="summary"></div><button id="pay" class="action order pay">💳 Pay ₹30 Advance by UPI</button><button id="wa" class="action order" style="margin-top:9px">✅ I Have Paid — Send Order on WhatsApp</button>
 <p class="note">UPI ID: <b>paytmqr68lobt@ptys</b><br>Direct UPI on GitHub Pages cannot automatically verify payment.</p></div></div>
 <script>
@@ -63,11 +62,11 @@ const t=total(c);s.innerHTML='<div><span>Order Total</span><b>₹'+t+'</b></div>
 function esc(x){return String(x).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function chg(n,d){const c=get();c[n].qty+=d;if(c[n].qty<=0)c.splice(n,1);save(c);render()}function rm(n){const c=get();c.splice(n,1);save(c);render()}
 document.getElementById('clear').onclick=()=>{save([]);render()};const modal=document.getElementById('modal');document.getElementById('order').onclick=()=>{if(!get().length)return alert('Your cart is empty.');modal.classList.add('open');renderModal()};document.getElementById('close').onclick=()=>modal.classList.remove('open');
-document.querySelectorAll('input[name=type]').forEach(x=>x.onchange=()=>{const d=x.value==='Delivery'&&x.checked;address.style.display=d?'block':'none';al.style.display=d?'block':'none'});
-function valid(){const n=name.value.trim(),ph=phone.value.trim(),t=document.querySelector('input[name=type]:checked').value,a=address.value.trim();if(!n)return alert('Enter your name.'),false;if(!/^[6-9]\d{9}$/.test(ph))return alert('Enter a valid 10-digit mobile number.'),false;if(t==='Delivery'&&!a)return alert('Enter delivery address.'),false;return true}
+document.querySelectorAll('input[name=type]').forEach(x=>x.onchange=()=>{});
+function valid(){const n=name.value.trim(),ph=phone.value.trim();if(!n)return alert('Enter your name.'),false;if(!/^[6-9]\d{9}$/.test(ph))return alert('Enter a valid 10-digit mobile number.'),false;return true}
 function renderModal(){const t=total(get());ms.innerHTML='<div><span>Order Total</span><b>₹'+t+'</b></div><div class="advance"><span>Advance to Pay</span><b>₹'+Math.min(ADV,t)+'</b></div><div><span>Remaining</span><b>₹'+Math.max(0,t-ADV)+'</b></div>'}
-pay.onclick=()=>{if(!valid())return;location.href='upi://pay?pa='+encodeURIComponent(UPI)+'&pn='+encodeURIComponent('Friends Juice')+'&am='+ADV+'&cu=INR&tn='+encodeURIComponent('Friends Juice advance - '+name.value.trim())};
-wa.onclick=()=>{if(!valid())return;const c=get(),t=total(c),ty=document.querySelector('input[name=type]:checked').value,a=address.value.trim(),items=c.map(i=>i.qty+' × '+i.name+' — ₹'+(i.price*i.qty)).join('\n');const msg='🧃 *NEW ORDER — FRIENDS JUICE*\n\n👤 Name: '+name.value.trim()+'\n📱 Mobile: '+phone.value.trim()+'\n🛍️ Type: '+ty+'\n'+(ty==='Delivery'?'📍 Address: '+a+'\n':'')+'\n*Items:*\n'+items+'\n\n💰 Total: ₹'+t+'\n💳 Advance: ₹'+ADV+'\n💵 Remaining: ₹'+Math.max(0,t-ADV)+'\n\nUPI: '+UPI;window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank')};
+pay.onclick=()=>{if(!valid())return;const oid=window.friendsJuiceOrderId||document.getElementById('orderId')?.textContent||'FJ1001';const amount=Math.min(ADV,total(get()));const upi='upi://pay?pa='+encodeURIComponent(UPI)+'&pn='+encodeURIComponent('Friends Juice')+'&am='+encodeURIComponent(amount.toFixed(2))+'&cu=INR&tn='+encodeURIComponent('Friends Juice '+oid+' Advance');window.location.href=upi;};
+wa.onclick=()=>{if(!valid())return;const c=get(),t=total(c),ty=document.querySelector('input[name=type]:checked').value,oid=window.friendsJuiceOrderId||document.getElementById('orderId')?.textContent||'FJ1001',items=c.map(i=>i.qty+' × '+i.name+' — ₹'+(i.price*i.qty)).join('\n');const msg='🧃 *NEW ORDER — FRIENDS JUICE*\n\n🆔 Order ID: '+oid+'\n👤 Name: '+name.value.trim()+'\n📱 Mobile: '+phone.value.trim()+'\n🛍️ Type: '+ty+'\n\n*Items:*\n'+items+'\n\n💰 Total: ₹'+t+'\n💳 Advance: ₹'+Math.min(ADV,t)+'\n💵 Remaining: ₹'+Math.max(0,t-ADV)+'\n\nUPI: '+UPI+'\nWhatsApp: @friendsjuicekkr';window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank')};
 render();
 </script>
 <script>
