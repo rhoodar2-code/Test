@@ -1009,15 +1009,7 @@ body{
 
 
 
-    <button class="upi-pay-btn" id="upiPayBtn" type="button">💳 Pay ₹30 Advance by UPI</button>
-    <div class="payment-status" id="paymentStatus">After payment, tap “I Have Paid” below.</div>
-    <button class="paid-order-btn" id="paidOrderBtn" type="button">✅ I Have Paid — Send Order on WhatsApp</button>
-    <p class="upi-hint">UPI ID: <b>paytmqr68lobt@ptys</b></p>
-    <p class="security-note">Note: Direct UPI from a static HTML page cannot automatically verify payment. Please pay first and then send the order on WhatsApp.</p>
-  </div>
-</div>
-
-<footer class="footer">
+    <footer class="footer">
 <strong>Fresh &amp; Healthy ❤️</strong>
 <p>शुद्ध, ताजा एवं स्वादिष्ट • Pure Ingredients • Great Taste • Healthy Choice</p>
 <p>धन्यवाद! फिर पधारें! 🌿</p>
@@ -1127,25 +1119,109 @@ if(!card.querySelector('.price-option.active')){
 </script>
 
 
+
 <script>
 (function(){
+  const KEY='friendsJuiceCart';
+
+  function getCart(){
+    try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}
+  }
+  function saveCart(c){
+    localStorage.setItem(KEY,JSON.stringify(c));
+    updateCartCount();
+  }
+  function updateCartCount(){
+    const n=getCart().reduce((sum,i)=>sum+Number(i.qty||0),0);
+    document.querySelectorAll('#cartCount,#menuCartCount').forEach(el=>el.textContent=n);
+  }
+
+  // Add to Cart: a price must be explicitly clicked first.
+  document.querySelectorAll('.item-add').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      const card=btn.closest('.card');
+      const picker=card && card.querySelector('.price-picker');
+      const active=picker && picker.querySelector('.price-option.active');
+
+      if(!active){
+        alert('Please select a price first.');
+        return;
+      }
+
+      const name=card.querySelector('h2')?.textContent.trim()||'Item';
+      const price=Number(active.dataset.price);
+      if(!price){alert('Please select a price first.');return}
+
+      const c=getCart();
+      const found=c.find(i=>i.name===name && Number(i.price)===price);
+      if(found) found.qty++;
+      else c.push({name:name,price:price,qty:1});
+      saveCart(c);
+
+      const old=btn.textContent;
+      btn.textContent='✅ Added';
+      setTimeout(()=>btn.textContent=old,700);
+
+      // Reset price after adding so another price can be selected.
+      picker.querySelectorAll('.price-option').forEach(b=>b.classList.remove('active'));
+      const sel=picker.querySelector('.price-select');
+      if(sel) sel.selectedIndex=-1;
+    });
+  });
+
+  // Price buttons.
   document.querySelectorAll('.price-picker').forEach(function(picker){
-    const select = picker.querySelector('.price-select');
+    const select=picker.querySelector('.price-select');
     picker.querySelectorAll('.price-option').forEach(function(btn){
       btn.classList.remove('active');
-      btn.addEventListener('click', function(){
-        picker.querySelectorAll('.price-option').forEach(b => b.classList.remove('active'));
+      btn.addEventListener('click',function(e){
+        e.preventDefault();
+        picker.querySelectorAll('.price-option').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         if(select){
-          select.value = btn.dataset.price;
-          select.dispatchEvent(new Event('change', {bubbles:true}));
+          select.value=btn.dataset.price;
         }
       });
     });
   });
+
+  // Category dropdown.
+  const dropdown=document.getElementById('shortcutDropdown');
+  const trigger=document.getElementById('shortcutTrigger');
+  const label=document.getElementById('shortcutLabel');
+
+  if(dropdown && trigger){
+    trigger.addEventListener('click',function(e){
+      e.stopPropagation();
+      const open=dropdown.classList.toggle('open');
+      trigger.setAttribute('aria-expanded',open?'true':'false');
+    });
+
+    dropdown.querySelectorAll('.shortcut-option').forEach(function(option){
+      option.addEventListener('click',function(e){
+        e.stopPropagation();
+        const id=option.dataset.value;
+        const target=document.getElementById(id);
+        const text=option.querySelector('span')?.textContent?.trim()||'';
+        if(label && text) label.textContent=text;
+        dropdown.classList.remove('open');
+        trigger.setAttribute('aria-expanded','false');
+        if(target){
+          window.scrollTo({top:Math.max(0,target.getBoundingClientRect().top+window.scrollY-75),behavior:'smooth'});
+        }
+      });
+    });
+
+    document.addEventListener('click',function(e){
+      if(!dropdown.contains(e.target)){
+        dropdown.classList.remove('open');
+        trigger.setAttribute('aria-expanded','false');
+      }
+    });
+  }
+
+  updateCartCount();
 })();
 </script>
-
 </body>
 </html>
-
