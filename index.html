@@ -749,6 +749,22 @@ body{
   opacity:.7;
 }
 
+
+/* Final mobile top bar sizing */
+.top-actions{gap:7px!important}
+.top-actions .shortcut-dropdown{flex:1.35 1 0!important;width:0!important}
+.top-actions .added-items-btn{flex:.85 1 0!important;width:0!important;min-width:0!important}
+.top-actions .about-us-btn{flex:.85 1 0!important;min-width:0!important}
+.top-actions .added-items-btn::after{font-size:12px!important;margin-left:1px}
+@media(max-width:520px){
+  .top-actions{width:calc(100% - 16px)!important;padding:5px!important;gap:6px!important}
+  .top-actions .shortcut-trigger{font-size:14px!important;padding:0 10px!important}
+  .top-actions .added-items-btn,.top-actions .about-us-btn{font-size:13px!important;padding-left:8px!important;padding-right:8px!important}
+}
+@media(max-width:380px){
+  .top-actions .shortcut-trigger{font-size:13px!important}
+  .top-actions .added-items-btn,.top-actions .about-us-btn{font-size:12px!important}
+}
 </style></head>
 <body>
 <div class="wrap">
@@ -1042,6 +1058,36 @@ body{
     const count = getCart().reduce((sum, item) => sum + Number(item.qty || 0), 0);
     document.querySelectorAll('#cartCount, #menuCartCount').forEach(el => {
       el.textContent = count;
+    });
+  }
+
+  if (dropdown && trigger) {
+    trigger.addEventListener('click', function(e){
+      e.stopPropagation();
+      const open = dropdown.classList.toggle('open');
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
+    dropdown.querySelectorAll('.shortcut-option').forEach(option => {
+      option.addEventListener('click', function(){
+        const value = option.dataset.value;
+        const target = document.getElementById(value);
+        const text = option.querySelector('span')?.textContent?.trim() || '';
+        if (label && text) label.textContent = text;
+        dropdown.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+        if (target) {
+          const y = target.getBoundingClientRect().top + window.scrollY - 70;
+          window.scrollTo({top: Math.max(0, y), behavior:'smooth'});
+        }
+      });
+    });
+
+    document.addEventListener('click', function(e){
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+      }
     });
   }
 
