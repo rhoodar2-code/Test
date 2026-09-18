@@ -32,6 +32,14 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
 .types{display:flex;gap:8px}.types label{flex:1;background:#fff;border:1px solid #d6c8aa;padding:12px;border-radius:10px;text-align:center}
 .close{float:right;background:#e74618;color:#fff;border:0;border-radius:50%;width:36px;height:36px;font-size:22px}
 .order-note{margin:12px 0;padding:11px 13px;border-radius:13px;background:#f7f7f2;border:1px solid #e3dac7;color:#174b3d;font-weight:800;text-align:center;line-height:1.4}
+.pay-box{margin-top:12px;padding:13px;border:1px solid #d6c8aa;border-radius:14px;background:#fff}
+.pay-title{font-weight:950;color:#063d34;margin-bottom:8px}
+.pay-options{display:flex;gap:8px}
+.pay-options label{flex:1;margin:0!important;padding:10px!important;border:1px solid #d6c8aa;border-radius:10px;background:#fff;text-align:center;font-weight:800}
+.pay-info{margin-top:9px;font-size:13px;color:#687268;line-height:1.4}
+.pay-btn{margin-top:9px;background:#087343;color:#fff;border:0;border-radius:11px;padding:12px;width:100%;font-weight:950}
+.call-btn{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;margin-top:9px;background:#063d34;color:#fff;border-radius:13px;padding:13px;font-weight:950}
+.finish-note{margin-top:10px;font-size:12px;color:#687268;text-align:center}
 </style>
 </head>
 <body>
@@ -54,7 +62,7 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
   <div class="modalcard">
     <button id="close" class="close" type="button">×</button>
     <h2>🧃 Complete Order</h2>
-    <div class="order-note">📲 No online payment is required. Your order will be sent directly on WhatsApp.</div>
+    <div class="order-note">You can pay a ₹30 advance if you want. If you do not pay in advance, call us for order confirmation.</div>
 
     <label for="name">Name</label>
     <input id="name" autocomplete="name" placeholder="Your name">
@@ -69,7 +77,20 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
     </div>
 
     <div id="ms" class="summary"></div>
-    <button id="wa" class="action order" style="margin-top:12px" type="button">📲 Send Order on WhatsApp</button>
+
+    <div class="pay-box">
+      <div class="pay-title">Advance Payment</div>
+      <div class="pay-options">
+        <label><input type="radio" name="payment" value="No Advance" checked> Call for Confirmation</label>
+        <label><input type="radio" name="payment" value="Advance"> Pay ₹30 Advance</label>
+      </div>
+      <div id="payInfo" class="pay-info">No advance payment. Please call Friends Juice for order confirmation.</div>
+      <button id="payBtn" class="pay-btn" type="button" style="display:none">Pay ₹30 by UPI</button>
+    </div>
+
+    <a class="call-btn" href="tel:9992238093">Call Friends Juice — 9992238093</a>
+    <button id="wa" class="action order" style="margin-top:12px" type="button">Send Order on WhatsApp</button>
+    <div class="finish-note">Close this window to clear the cart and return to the menu.</div>
   </div>
 </div>
 
@@ -119,9 +140,7 @@ function rm(n){const c=get();c.splice(n,1);save(c);render()}
 document.getElementById('clear').onclick=()=>{
   save([]);
   localStorage.removeItem(ORDER_ID_KEY);
-  document.getElementById('orderId').textContent='Generating...';
-  render();
-  generateOrderId();
+  window.location.href='index.html';
 };
 const modal=document.getElementById('modal');
 document.getElementById('order').onclick=()=>{
@@ -129,7 +148,7 @@ document.getElementById('order').onclick=()=>{
   modal.classList.add('open');
   renderModal();
 };
-document.getElementById('close').onclick=()=>modal.classList.remove('open');
+document.getElementById('close').onclick=()=>finishOrder();
 
 function renderModal(){
   const t=total(get());
@@ -149,7 +168,8 @@ document.getElementById('wa').onclick=()=>{
   const c=get(), t=total(c);
   const ty=document.querySelector('input[name=type]:checked').value;
   const oid=document.getElementById('orderId').textContent;
-  if(!oid || oid==='Generating...'){alert('Order ID is still being generated. Please wait a moment.');return}
+  if(!oid || oid==='Generating...' || oid==='Error'){alert('Order ID is still being generated. Please wait a moment.');return}
+  const payment=document.querySelector('input[name=payment]:checked').value;
   const items=c.map(i=>Number(i.qty)+'×'+Number(i.price)+' '+i.name+' - ₹'+(Number(i.price)*Number(i.qty))).join('\n');
   const msg='ORDER FRIENDS JUICE\n'
     +'ORDER ID: '+oid+'\n'
@@ -157,8 +177,39 @@ document.getElementById('wa').onclick=()=>{
     +'MOBILE: '+document.getElementById('phone').value.trim()+'\n'
     +'TYPE: '+ty+'\n\n'
     +'ITEMS:\n'+items+'\n\n'
-    +'TOTAL AMOUNT: ₹'+t;
+    +'TOTAL AMOUNT: ₹'+t+'\n'
+    +'PAYMENT: '+(payment==='Advance'?'₹30 Advance (UPI)':'No Advance - Call for Order Confirmation');
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
+};
+
+function finishOrder(){
+  save([]);
+  localStorage.removeItem(ORDER_ID_KEY);
+  window.location.href='index.html';
+}
+
+const payInfo=document.getElementById('payInfo');
+const payBtn=document.getElementById('payBtn');
+document.querySelectorAll('input[name=payment]').forEach(r=>{
+  r.addEventListener('change',()=>{
+    const advance=document.querySelector('input[name=payment]:checked').value==='Advance';
+    payBtn.style.display=advance?'block':'none';
+    payInfo.textContent=advance
+      ? '₹30 advance will open your UPI app. Payment is not automatically verified.'
+      : 'No advance payment. Please call Friends Juice for order confirmation.';
+  });
+});
+
+payBtn.onclick=()=>{
+  if(!valid())return;
+  const name=document.getElementById('name').value.trim();
+  const oid=document.getElementById('orderId').textContent;
+  const upiId='paytmqr68lobt@ptys';
+  const upiUrl='upi://pay?pa='+encodeURIComponent(upiId)
+    +'&pn='+encodeURIComponent('Friends Juice')
+    +'&am=30.00&cu=INR'
+    +'&tn='+encodeURIComponent('Friends Juice advance '+oid+' '+name);
+  window.location.href=upiUrl;
 };
 
 function generateOrderId(){
@@ -168,27 +219,61 @@ function generateOrderId(){
     return;
   }
 
-  const callback='fjOrderId_'+Date.now();
-  const script=document.createElement('script');
-  const cleanup=()=>{try{delete window[callback]}catch(e){};script.remove()};
-  window[callback]=(data)=>{
-    cleanup();
+  let finished=false;
+  let script=null;
+  let iframe=null;
+  const timeout=setTimeout(()=>{
+    if(!finished) useIframeFallback();
+  },5000);
+
+  function finish(data){
+    if(finished)return;
+    finished=true;
+    clearTimeout(timeout);
+    if(script)script.remove();
+    if(iframe)iframe.remove();
     if(data && data.success && data.orderId){
       localStorage.setItem(ORDER_ID_KEY,data.orderId);
       document.getElementById('orderId').textContent=data.orderId;
     }else{
       document.getElementById('orderId').textContent='Error';
-      alert('Could not generate Order ID. Please refresh and try again.');
+      alert('Could not generate Order ID. Please try again.');
     }
-  };
-  script.onerror=()=>{cleanup();document.getElementById('orderId').textContent='Error';alert('Could not connect to Order ID server. Please check your internet connection.');};
+  }
+
+  function useIframeFallback(){
+    if(finished)return;
+    if(script){script.remove();script=null;}
+    iframe=document.createElement('iframe');
+    iframe.style.display='none';
+    iframe.setAttribute('aria-hidden','true');
+    iframe.src=API_URL+'?project='+encodeURIComponent(PROJECT)+'&embed=1';
+    document.body.appendChild(iframe);
+    setTimeout(()=>{
+      if(!finished){
+        finished=true;
+        if(iframe)iframe.remove();
+        document.getElementById('orderId').textContent='Error';
+        alert('Could not connect to Order ID server. Please try again.');
+      }
+    },10000);
+  }
+
+  const callback='fjOrderId_'+Date.now()+'_'+Math.floor(Math.random()*100000);
+  window[callback]=(data)=>finish(data);
+  script=document.createElement('script');
   script.src=API_URL+'?project='+encodeURIComponent(PROJECT)+'&callback='+encodeURIComponent(callback);
+  script.onerror=()=>useIframeFallback();
   document.body.appendChild(script);
+
+  window.addEventListener('message',function onMessage(event){
+    if(!event.data || !event.data.success || !event.data.orderId)return;
+    window.removeEventListener('message',onMessage);
+    finish(event.data);
+  });
 }
-
-generateOrderId();
-
 render();
+if(get().length) generateOrderId();
 </script>
 </body>
 </html>
