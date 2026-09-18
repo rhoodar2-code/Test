@@ -140,24 +140,39 @@ document.getElementById('wa').onclick=()=>{
   const c=get(), t=total(c);
   const ty=document.querySelector('input[name=type]:checked').value;
   const oid=document.getElementById('orderId').textContent;
-  const items=c.map(i=>Number(i.qty)+' × '+i.name+' — ₹'+(Number(i.price)*Number(i.qty))).join('\n');
-  const msg='🧃 *NEW ORDER — FRIENDS JUICE*\\n\\n'
-    +'🆔 Order ID: '+oid+'\\n'
-    +'👤 Name: '+document.getElementById('name').value.trim()+'\\n'
-    +'📱 Mobile: '+document.getElementById('phone').value.trim()+'\\n'
-    +'🛍️ Type: '+ty+'\\n\\n'
-    +'*Items:*\\n'+items+'\\n\\n'
-    +'💰 *Total: ₹'+t+'*\\n\\n'
-    +'WhatsApp: @friendsjuicekkr';
+  const cleanText = (value) => String(value)
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}]/gu, '')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+
+  const cleanItems = c.map(i =>
+    Number(i.qty)+' x '+cleanText(i.name)+' - ₹'+(Number(i.price)*Number(i.qty))
+  ).join('\n');
+
+  const msg='ORDER FRIENDS JUICE\n'
+    +'ORDER ID: '+oid+'\n'
+    +'NAME: '+cleanText(document.getElementById('name').value)+'\n'
+    +'MOBILE: '+document.getElementById('phone').value.trim()+'\n'
+    +'TYPE: '+cleanText(ty)+'\n'
+    +'ITEMS:\n'+cleanItems+'\n'
+    +'TOTAL AMOUNT: ₹'+t;
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
 };
 
 (function makeOrderId(){
-  let n=parseInt(localStorage.getItem('friendsJuiceNextOrderNumber')||'1000',10);
-  if(!Number.isFinite(n)||n<1000)n=1000;
-  n++;
+  // New ID on every cart page load/refresh.
+  // Format: FJ + DDMMYY + 001..999. After 999, restart at 001.
+  let n=parseInt(localStorage.getItem('friendsJuiceNextOrderNumber')||'0',10);
+  if(!Number.isFinite(n) || n<0 || n>999) n=0;
+  n = n >= 999 ? 1 : n + 1;
   localStorage.setItem('friendsJuiceNextOrderNumber',String(n));
-  document.getElementById('orderId').textContent='FJ'+n;
+
+  const d=new Date();
+  const dd=String(d.getDate()).padStart(2,'0');
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const yy=String(d.getFullYear()).slice(-2);
+  const seq=String(n).padStart(3,'0');
+  document.getElementById('orderId').textContent='FJ'+dd+mm+yy+seq;
 })();
 
 render();
