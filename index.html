@@ -1028,39 +1028,6 @@ body{
 
 <script>
 (function(){
-const KEY='friendsJuiceCart';
-function cart(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
-function save(c){localStorage.setItem(KEY,JSON.stringify(c));update()}
-function update(){const n=cart().reduce((s,i)=>s+Number(i.qty||0),0);document.querySelectorAll('#menuCartCount,#cartCount').forEach(e=>e.textContent=n)}
-document.querySelectorAll('.item-add').forEach(btn=>{
-btn.addEventListener('click',()=>{
-const card=btn.closest('.card'), name=card?.querySelector('h2')?.textContent.trim()||'Item';
-const sel=card?.querySelector('.price-select');
-const price=Number(sel?.value||card?.querySelector('.price')?.textContent.replace(/[^0-9]/g,'')||0);
-if(!price){alert('Please select a price.');return}
-const c=cart(), found=c.find(i=>i.name===name&&i.price===price);
-if(found)found.qty++;else c.push({name,price,qty:1});
-save(c);
-const old=btn.textContent;btn.textContent='✅ Added';
-setTimeout(()=>btn.textContent=old,700);
-
-// Reset the selected price after adding, so the same item can be
-// added again at a different price (e.g. 2×₹50 + 2×₹30).
-const picker=card?.querySelector('.price-picker');
-const select2=card?.querySelector('.price-select');
-if(picker && select2){
-  const options=picker.querySelectorAll('.price-option');
-  options.forEach(b=>b.classList.remove('active'));
-  if(select2.options.length) select2.selectedIndex=-1;
-}
-});
-});
-update();
-})();
-</script>
-
-<script>
-(function(){
   const KEY = 'friendsJuiceCart';
   const dropdown = document.getElementById('shortcutDropdown');
   const trigger = document.getElementById('shortcutTrigger');
@@ -1080,11 +1047,6 @@ update();
 
   if (dropdown && trigger) {
     trigger.addEventListener('click', function(e){
-if(!card.querySelector('.price-option.active')){
-  alert('Please select a price first.');
-  return;
-}
-
       e.stopPropagation();
       const open = dropdown.classList.toggle('open');
       trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
