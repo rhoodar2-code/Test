@@ -76,68 +76,9 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
 <script>
 const KEY='friendsJuiceCart';
 const WA='919992238093';
-
-// Central Order ID service
 const API_URL='https://script.google.com/macros/s/AKfycbwv2lBWcuWjU93QXM5K7M5RWoe3WPheqQ4YI4UV1sJlPB1SPHxqZmRnksX5Di8l4K0/exec';
 const PROJECT='FJ';
-const ORDER_ID_KEY='friendsJuiceActiveOrderId';
-
-function validOrderId(id){
-  return /^FJ\d{6}\d{3}$/.test(String(id||''));
-}
-
-function setOrderId(id){
-  localStorage.setItem(ORDER_ID_KEY,id);
-  document.getElementById('orderId').textContent=id;
-}
-
-function ensureOrderId(){
-  const c=get();
-  if(!c.length){
-    document.getElementById('orderId').textContent='—';
-    return;
-  }
-
-  const existing=localStorage.getItem(ORDER_ID_KEY);
-  if(validOrderId(existing)){
-    document.getElementById('orderId').textContent=existing;
-    return;
-  }
-
-  document.getElementById('orderId').textContent='Generating...';
-
-  const callbackName='fjOrderIdCallback_'+Date.now();
-  const script=document.createElement('script');
-  let finished=false;
-
-  const cleanup=()=>{
-    if(script.parentNode)script.parentNode.removeChild(script);
-    try{delete window[callbackName]}catch(e){}
-  };
-
-  window[callbackName]=(data)=>{
-    if(finished)return;
-    finished=true;
-    cleanup();
-    if(data && data.success && validOrderId(data.orderId)){
-      setOrderId(data.orderId);
-    }else{
-      document.getElementById('orderId').textContent='Unable to generate';
-      alert('Unable to generate Order ID. Please check your internet connection and try again.');
-    }
-  };
-
-  script.onerror=()=>{
-    if(finished)return;
-    finished=true;
-    cleanup();
-    document.getElementById('orderId').textContent='Unable to generate';
-    alert('Unable to connect to the Order ID server. Please try again.');
-  };
-
-  script.src=API_URL+'?project='+encodeURIComponent(PROJECT)+'&callback='+encodeURIComponent(callbackName)+'&_='+Date.now();
-  document.body.appendChild(script);
-}
+const ORDER_ID_KEY='friendsJuiceOrderId';
 
 function get(){
   try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}
@@ -178,8 +119,9 @@ function rm(n){const c=get();c.splice(n,1);save(c);render()}
 document.getElementById('clear').onclick=()=>{
   save([]);
   localStorage.removeItem(ORDER_ID_KEY);
-  document.getElementById('orderId').textContent='—';
+  document.getElementById('orderId').textContent='Generating...';
   render();
+  generateOrderId();
 };
 const modal=document.getElementById('modal');
 document.getElementById('order').onclick=()=>{
@@ -207,11 +149,7 @@ document.getElementById('wa').onclick=()=>{
   const c=get(), t=total(c);
   const ty=document.querySelector('input[name=type]:checked').value;
   const oid=document.getElementById('orderId').textContent;
-  if(!validOrderId(oid)){
-    alert('Please wait for the Order ID to be generated.');
-    ensureOrderId();
-    return;
-  }
+  if(!oid || oid==='Generating...'){alert('Order ID is still being generated. Please wait a moment.');return}
   const items=c.map(i=>Number(i.qty)+'×'+Number(i.price)+' '+i.name+' - ₹'+(Number(i.price)*Number(i.qty))).join('\n');
   const msg='ORDER FRIENDS JUICE\n'
     +'ORDER ID: '+oid+'\n'
@@ -223,9 +161,32 @@ document.getElementById('wa').onclick=()=>{
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
 };
 
-(function(){
-  ensureOrderId();
-})();
+function generateOrderId(){
+  const existing=localStorage.getItem(ORDER_ID_KEY);
+  if(existing){
+    document.getElementById('orderId').textContent=existing;
+    return;
+  }
+
+  const callback='fjOrderId_'+Date.now();
+  const script=document.createElement('script');
+  const cleanup=()=>{try{delete window[callback]}catch(e){};script.remove()};
+  window[callback]=(data)=>{
+    cleanup();
+    if(data && data.success && data.orderId){
+      localStorage.setItem(ORDER_ID_KEY,data.orderId);
+      document.getElementById('orderId').textContent=data.orderId;
+    }else{
+      document.getElementById('orderId').textContent='Error';
+      alert('Could not generate Order ID. Please refresh and try again.');
+    }
+  };
+  script.onerror=()=>{cleanup();document.getElementById('orderId').textContent='Error';alert('Could not connect to Order ID server. Please check your internet connection.');};
+  script.src=API_URL+'?project='+encodeURIComponent(PROJECT)+'&callback='+encodeURIComponent(callback);
+  document.body.appendChild(script);
+}
+
+generateOrderId();
 
 render();
 </script>
