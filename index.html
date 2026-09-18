@@ -749,6 +749,21 @@ body{
   opacity:.7;
 }
 
+
+/* Final top-bar sizing: give dropdown enough room so the arrow stays inside */
+.top-actions{gap:6px!important}
+.top-actions .shortcut-dropdown{flex:1.25 1 0!important;min-width:0!important;width:auto!important}
+.top-actions .added-items-btn{flex:.85 1 0!important;min-width:0!important;width:auto!important;padding-left:8px!important;padding-right:8px!important;font-size:14px!important}
+.top-actions .about-us-btn{flex:.85 1 0!important;min-width:0!important;padding-left:8px!important;padding-right:8px!important;font-size:14px!important}
+.top-actions .about-us-btn .about-icon{width:21px!important;height:21px!important;font-size:14px!important}
+.top-actions .shortcut-trigger{min-width:0!important;overflow:hidden!important}
+.top-actions .shortcut-trigger #shortcutLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:420px){
+ .top-actions{gap:5px!important;width:calc(100% - 12px)!important}
+ .top-actions .shortcut-dropdown{flex:1.28 1 0!important}
+ .top-actions .added-items-btn,.top-actions .about-us-btn{flex:.86 1 0!important;font-size:13px!important}
+}
+
 </style></head>
 <body>
 <div class="wrap">

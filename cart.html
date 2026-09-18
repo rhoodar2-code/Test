@@ -32,6 +32,12 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
 .types{display:flex;gap:8px}.types label{flex:1;background:#fff;border:1px solid #d6c8aa;padding:12px;border-radius:10px;text-align:center}
 .close{float:right;background:#e74618;color:#fff;border:0;border-radius:50%;width:36px;height:36px;font-size:22px}
 .order-note{margin:12px 0;padding:11px 13px;border-radius:13px;background:#f7f7f2;border:1px solid #e3dac7;color:#174b3d;font-weight:800;text-align:center;line-height:1.4}
+
+.order-contact-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.order-contact-row .action{margin-top:0!important}
+.call{background:linear-gradient(135deg,#087343,#0a9b59);color:#fff;border:2px solid #d8ff87}
+@media(max-width:420px){.order-contact-row{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -54,7 +60,7 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
   <div class="modalcard">
     <button id="close" class="close" type="button">×</button>
     <h2>🧃 Complete Order</h2>
-    <div class="order-note">📲 No online payment is required. Your order will be sent directly on WhatsApp.</div>
+    <div class="order-note">Please pay some amount as advance or call us after completing your order on WhatsApp. We will confirm your order shortly.</div>
 
     <label for="name">Name</label>
     <input id="name" autocomplete="name" placeholder="Your name">
@@ -69,7 +75,7 @@ body{margin:0;background:linear-gradient(135deg,#fffdf7,#f4eddb);color:#17251b;f
     </div>
 
     <div id="ms" class="summary"></div>
-    <button id="wa" class="action order" style="margin-top:12px" type="button">📲 Send Order on WhatsApp</button>
+    <div class="order-contact-row"><button id="wa" class="action order" type="button">Send Order on WhatsApp</button><a id="call" class="action call" href="tel:9992238093">Call 9992238093</a></div>
   </div>
 </div>
 
@@ -120,7 +126,8 @@ document.getElementById('order').onclick=()=>{
   modal.classList.add('open');
   renderModal();
 };
-document.getElementById('close').onclick=()=>modal.classList.remove('open');
+document.getElementById('close').onclick=()=>{save([]);window.location.href='index.html';};
+modal.addEventListener('click',e=>{if(e.target===modal){save([]);window.location.href='index.html';}});
 
 function renderModal(){
   const t=total(get());
@@ -140,13 +147,14 @@ document.getElementById('wa').onclick=()=>{
   const c=get(), t=total(c);
   const ty=document.querySelector('input[name=type]:checked').value;
   const oid=document.getElementById('orderId').textContent;
-  const cleanText = (value) => String(value)
-    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}]/gu, '')
+
+  const cleanText=(value)=>String(value)
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}]/gu,'')
     .replace(/\s{2,}/g,' ')
     .trim();
 
-  const cleanItems = c.map(i =>
-    Number(i.qty)+' x '+cleanText(i.name)+' - ₹'+(Number(i.price)*Number(i.qty))
+  const cleanItems=c.map(i=>
+    Number(i.qty)+'×'+cleanText(i.name)+' - ₹'+(Number(i.price)*Number(i.qty))
   ).join('\n');
 
   const msg='ORDER FRIENDS JUICE\n'
@@ -156,17 +164,17 @@ document.getElementById('wa').onclick=()=>{
     +'TYPE: '+cleanText(ty)+'\n'
     +'ITEMS:\n'+cleanItems+'\n'
     +'TOTAL AMOUNT: ₹'+t;
+
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
 };
 
 (function makeOrderId(){
-  // New ID on every cart page load/refresh.
-  // Format: FJ + DDMMYY + 001..999. After 999, restart at 001.
+  // New ID every time cart.html is loaded/refreshed.
+  // Format: FJ + DDMMYY + 001..999; after 999, restart at 001.
   let n=parseInt(localStorage.getItem('friendsJuiceNextOrderNumber')||'0',10);
-  if(!Number.isFinite(n) || n<0 || n>999) n=0;
-  n = n >= 999 ? 1 : n + 1;
+  if(!Number.isFinite(n)||n<0||n>999)n=0;
+  n=(n>=999)?1:n+1;
   localStorage.setItem('friendsJuiceNextOrderNumber',String(n));
-
   const d=new Date();
   const dd=String(d.getDate()).padStart(2,'0');
   const mm=String(d.getMonth()+1).padStart(2,'0');
